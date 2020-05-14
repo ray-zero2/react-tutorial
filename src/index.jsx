@@ -1,123 +1,103 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-const Square = props => {
+const Square = ({value, onClick}) => {
   return (
     <button
       className="square"
-      onClick={props.onClick}
+      onClick={onClick}
     >
-      {props.value}
+      {value}
     </button>
   );
 }
 
-class Board extends React.Component {
-  renderSquare(i) {
-    return <Square
-      value={this.props.squares[i]}
-      onClick={() => this.props.onClick(i)}
-      />;
-  }
-
-  render() {
+const Board = ({ squares, onClick }) => {
+  const renderSquare = index => {
     return (
-      <div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
-      </div>
+      <Square
+        value={squares[index]}
+        onClick={() => onClick(index)}
+      />
     );
   }
+
+  return (
+    <div>
+      <div className="board-row">
+        {renderSquare(0)}
+        {renderSquare(1)}
+        {renderSquare(2)}
+      </div>
+      <div className="board-row">
+        {renderSquare(3)}
+        {renderSquare(4)}
+        {renderSquare(5)}
+      </div>
+      <div className="board-row">
+        {renderSquare(6)}
+        {renderSquare(7)}
+        {renderSquare(8)}
+      </div>
+    </div>
+  );
 }
 
-class Game extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      history: [
-        {
-          squares: Array(9).fill(null)
-        }
-      ],
-      xIsNext: true,
-      stepNumber: 0
-    }
-  }
+const Game = () => {
+  const [history, setHistory] = useState([{squares: Array(9).fill(null)}]);
+  const [xIsNext, setXIsNext] = useState(true);
+  const [stepNumber, setStepNumber] = useState(0);
 
-  handleClick(i) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const lastIndex = history.length - 1;
-    const current = history[lastIndex];
+  const handleClick = index => {
+    const _history = history.slice(0, stepNumber + 1);
+    const lastIndex = _history.length - 1;
+    const current = _history[lastIndex];
     const squares = current.squares.slice();
-    if(calculateWinner(squares) || squares[i]) return;
+    if(calculateWinner(squares) || squares[index]) return;
 
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
-      history: history.concat([{
-        squares: squares
-      }]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext
-    });
+    squares[index] = xIsNext ? 'X' : 'O';
+
+    setHistory(_history.concat([{squares}]));
+    setStepNumber(_history.length);
+    setXIsNext(!xIsNext);
   }
 
-  jumpTo(index) {
-    this.setState({
-      stepNumber: index,
-      xIsNext: index%2 === 0
-    });
+  const jumpTo = index => {
+    setStepNumber(index);
+    setXIsNext(index % 2 === 0);
   }
 
-  render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
-
-    const moves = history.map((step, index) => {
-      const desc = index ? 'Go to move #' + index : 'Go to start';
-      return (
-        <li key={ index }>
-          <button onClick={() => this.jumpTo(index)}>{ desc }</button>
-        </li>
-      )
-    })
-
-    let status;
-    if(winner) {
-      status = 'Winner: ' + winner;
-    } else {
-      status = `Next player: ${this.state.xIsNext ? 'X' : 'O'}`;
-    }
-
+  const current = history[stepNumber];
+  const winner = calculateWinner(current.squares);
+  const moves = history.map((step, index) => {
+    const desc = index ? `Go to move #${index}` : 'Go to start';
     return (
-      <div className="game">
-        <div className="game-board">
-          <Board
-            squares={current.squares}
-            onClick={(i) => this.handleClick(i)}
-          />
-        </div>
-        <div className="game-info">
-          <div>{ status }</div>
-          <ol>{ moves }</ol>
-        </div>
+      <li key={ index }>
+        <button onClick={() => jumpTo(index)}>{ desc }</button>
+      </li>
+    )
+  })
+
+  const status = winner ?
+    `Winner: ${winner}`
+    : `Next player: ${xIsNext ? 'X' : 'O'}`;
+
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board
+          squares={current.squares}
+          onClick={handleClick}
+        />
       </div>
-    );
-  }
+      <div className="game-info">
+        <div>{ status }</div>
+        <ol>{ moves }</ol>
+      </div>
+    </div>
+  );
 }
 
 function calculateWinner(squares) {
