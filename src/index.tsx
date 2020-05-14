@@ -2,7 +2,27 @@ import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-const Square = ({value, onClick}) => {
+type Mark = 'X' | 'O' | null;
+
+interface SquareProps {
+  value: Mark;
+  onClick: () => void;
+}
+
+interface BoardProps {
+  squares: Mark[];
+  onClick: (index: number) => void;
+}
+
+interface HistoryElement {
+  squares: Mark[];
+}
+
+type History = HistoryElement[]
+
+
+
+const Square: React.FC<SquareProps> = ({value, onClick}) => {
   return (
     <button
       className="square"
@@ -13,8 +33,8 @@ const Square = ({value, onClick}) => {
   );
 }
 
-const Board = ({ squares, onClick }) => {
-  const renderSquare = index => {
+const Board: React.FC<BoardProps> = ({ squares, onClick }) => {
+  const renderSquare = (index: number) => {
     return (
       <Square
         value={squares[index]}
@@ -45,11 +65,11 @@ const Board = ({ squares, onClick }) => {
 }
 
 const Game = () => {
-  const [history, setHistory] = useState([{squares: Array(9).fill(null)}]);
+  const [history, setHistory] = useState<History>([{squares: Array(9).fill(null)}]);
   const [xIsNext, setXIsNext] = useState(true);
   const [stepNumber, setStepNumber] = useState(0);
 
-  const handleClick = index => {
+  const handleClick = (index: number): void => {
     const _history = history.slice(0, stepNumber + 1);
     const lastIndex = _history.length - 1;
     const current = _history[lastIndex];
@@ -63,7 +83,7 @@ const Game = () => {
     setXIsNext(!xIsNext);
   }
 
-  const jumpTo = index => {
+  const jumpTo = (index: number): void => {
     setStepNumber(index);
     setXIsNext(index % 2 === 0);
   }
@@ -100,7 +120,7 @@ const Game = () => {
   );
 }
 
-function calculateWinner(squares) {
+function calculateWinner(squares: Mark[]) {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
